@@ -1,21 +1,20 @@
 ---
 name: write-diary
 description: Start recording today's diary entry. Use when the user wants to write, log, or dictate their diary or journal for today.
-allowed-tools: Bash, Read, Write
 ---
 
-Help the user write and log today's diary entry.
+Help the user write today's diary or reflect on past life.
 
 ## Steps
 
 1. Initialize the database if it doesn't exist:
 ```bash
-sqlite3 /Users/yihuima/just-a-diary/diary.db "CREATE TABLE IF NOT EXISTS entries (id INTEGER PRIMARY KEY AUTOINCREMENT, date TEXT NOT NULL, logged_at TEXT NOT NULL, content TEXT NOT NULL, mood_score INTEGER, mood_label TEXT, tags TEXT, word_count INTEGER);"
+sqlite3 ./diary.db "CREATE TABLE IF NOT EXISTS entries (id INTEGER PRIMARY KEY AUTOINCREMENT, log_time TEXT NOT NULL, content TEXT NOT NULL, mood_score INTEGER, mood_label TEXT, tags TEXT, word_count INTEGER);"
 ```
 
-2. Check if there's already an entry for today:
+2. Check if there's already an entry for today (6 AM local time starts a new day):
 ```bash
-sqlite3 /Users/yihuima/just-a-diary/diary.db "SELECT date, mood_score, mood_label, substr(content, 1, 100) FROM entries WHERE date(datetime(logged_at, '-7 hours')) = date('now', '-7 hours') ORDER BY id DESC LIMIT 1;"
+sqlite3 ./diary.db "SELECT log_time, mood_score, mood_label, substr(content, 1, 100) FROM entries WHERE log_time >= datetime('now', 'localtime', 'start of day', '+6 hours', 'utc') AND log_time < datetime('now', 'localtime', 'start of day', '+30 hours', 'utc') ORDER BY id DESC LIMIT 1;"
 ```
 
 3. If an entry exists for today, show it briefly and ask if they want to add a new entry or replace it.
@@ -31,26 +30,15 @@ sqlite3 /Users/yihuima/just-a-diary/diary.db "SELECT date, mood_score, mood_labe
    - mood_label: one word for dominant emotion (e.g. happy, tired, grateful, anxious, content, excited, accomplished)
    - tags: 1–5 topic tags (e.g. work, health, social, exercise, food, family, rest)
 
-6. Log to the database using today's date in PDT (UTC-7). Use the user's words verbatim as the content:
+6. Log to the database. Use the user's words verbatim as the content. `log_time` is always UTC in `YYYY-MM-DD HH:MM:SS` format:
 ```bash
-sqlite3 /Users/yihuima/just-a-diary/diary.db "INSERT INTO entries (date, logged_at, content, mood_score, mood_label, tags, word_count) VALUES ('[YYYY-MM-DD]', '[ISO timestamp PDT]', '[content]', [mood_score], '[mood_label]', '[tags json]', [word_count]);"
+sqlite3 ./diary.db "INSERT INTO entries (log_time, content, mood_score, mood_label, tags, word_count) VALUES ('[YYYY-MM-DD HH:MM:SS UTC]', '[content with single quotes escaped as '\'']', [mood_score], '[mood_label]', '[tags json]', [word_count]);"
 ```
 
-7. Ensure the entries directory exists, then append to the monthly markdown file at `/Users/yihuima/just-a-diary/entries/YYYY-MM.md`:
-```
-## YYYY-MM-DD  ★★★★☆  _mood_label_
-
-[content]
-
-*tag1 · tag2 · tag3*
-
----
-```
-
-8. Confirm: tell the user their mood score, label, and tags. Keep it warm and brief.
+7. Confirm: tell the user their mood score, label, and tags. Keep it warm and brief.
 
 ## Notes
 - Word count: count Chinese characters individually, count non-Chinese words by spaces
-- Always use PDT (UTC-7) for all timestamps
+- `log_time` is always stored as UTC `YYYY-MM-DD HH:MM:SS`. The 6 AM local time rule is applied when querying: today's diary day spans from `datetime('now', 'localtime', 'start of day', '+6 hours', 'utc')` to `datetime('now', 'localtime', 'start of day', '+30 hours', 'utc')`.
 - The user often writes in Chinese — that's fine, preserve it verbatim
 - Never summarize or rewrite their words — log exactly what they said

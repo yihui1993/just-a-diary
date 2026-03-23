@@ -1,8 +1,4 @@
 {
   "mcpServers": {
-    "telegram": {
-      "type": "plugin",
-      "plugin": "telegram@claude-plugins-official"
-    }
   }
 }

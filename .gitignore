@@ -1,0 +1,4 @@
+diary.db
+.env
+.DS_Store
+setup-state.json
