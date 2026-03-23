@@ -38,7 +38,5 @@ sqlite3 ./diary.db "INSERT INTO entries (log_time, content, mood_score, mood_lab
 7. Confirm: tell the user their mood score, label, and tags. Keep it warm and brief.
 
 ## Notes
-- Word count: count Chinese characters individually, count non-Chinese words by spaces
 - `log_time` is always stored as UTC `YYYY-MM-DD HH:MM:SS`. The 6 AM local time rule is applied when querying: today's diary day spans from `datetime('now', 'localtime', 'start of day', '+6 hours', 'utc')` to `datetime('now', 'localtime', 'start of day', '+30 hours', 'utc')`.
-- The user often writes in Chinese — that's fine, preserve it verbatim
-- Never summarize or rewrite their words — log exactly what they said
+- You can write the diary in any languages.
